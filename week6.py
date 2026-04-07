@@ -23,7 +23,6 @@ else:
 st.divider()
 
 # 第一组问题：社交伙伴维度
-# 说明：
 st.caption("请根据你与对方的实际互动情况，选择最符合的分数")
 a = st.radio("1.我和他/她主要在特定的场合或活动中互动（如工作、学习、运动），很少在其他情境见面。", [0, 2, 4, 6, 8, 10])
 b = st.radio("2.我们的交流内容大多围绕具体事务（如任务进度、学习问题、活动安排），很少涉及个人情感。", [0, 2, 4, 6, 8, 10])
@@ -35,7 +34,6 @@ e = st.radio("5.我对他/她的了解主要停留在表面（如兴趣爱好、
 st.divider()
 
 # 第二组问题：依恋对象维度
-# 说明：
 st.caption("请根据你对对方的情感依赖程度，选择最符合的分数")
 f = st.select_slider("6.当我感到焦虑、害怕或难过时，我首先会想联系他/她寻求安慰。", options=[0, 2, 4, 6, 8, 10])
 g = st.select_slider("7.有他/她在身边，我会觉得更有安全感，能够更放心地去探索新事物或面对挑战。", options=[0, 2, 4, 6, 8, 10])
@@ -47,7 +45,6 @@ j = st.select_slider("10.他/她的认可和鼓励对我情绪的影响非常大
 st.divider()
 
 # 第三组问题：灵魂伴侣维度
-# 说明：
 st.caption("请根据你与对方的精神契合度，填写最符合的分数")
 k = st.number_input("11.我感觉我们之间有一种超越言语的默契，常常不需要解释就能理解彼此的想法。", min_value=0, max_value=10, step=2)
 l = st.number_input("12.与他/她相处时，我可以完全真实地做自己，没有任何需要伪装的部分。", min_value=0, max_value=10, step=2)
@@ -77,7 +74,6 @@ best_match = ""       # 最佳匹配
 Dist = []            # 距离列表
 
 # 一键占卜按钮
-# 说明：点击按钮后，系统会计算你的得分与三种关系类型的匹配度
 if st.button("一键占卜", use_container_width=True):
     # 计算用户得分与各标准向量的欧氏距离
     for title, coords in profiles.items():
@@ -94,7 +90,6 @@ if st.button("一键占卜", use_container_width=True):
     st.toast("占卜完成！")
 
 # 后续问题：是否理想关系
-# 说明：请根据占卜结果，选择是否符合你的理想关系
 answer = st.radio("该结果是你的理想关系吗？", ["是理想关系", "不是理想关系"], horizontal=True, index=None)
 
 if answer == "不是理想关系":
@@ -108,6 +103,7 @@ if answer == "不是理想关系":
             time.sleep(0.01)
             bar.progress(i + 1)
         st.success(f"将来你们可能是：{weilai}~")
+        st.toast("抽签完成！")
 elif answer == "是理想关系":
     st.success(f"恭喜你噢！感谢参与~")
 
