@@ -2,4 +2,4 @@ streamlit
 math
 random
 time
-matplotlib.pyplot
+matplotlib
