@@ -2,6 +2,18 @@ import streamlit as st
 import math
 import random
 import time
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# 初始化会话状态
+if 'best_match' not in st.session_state:
+    st.session_state.best_match = ""
+if 'distances' not in st.session_state:
+    st.session_state.distances = {}
+if 'answer' not in st.session_state:
+    st.session_state.answer = None
+if 'weilai' not in st.session_state:
+    st.session_state.weilai = ""
 
 # 设置页面标题和说明
 st.title("🔮 亲密关系占卜")
@@ -70,43 +82,93 @@ profiles = {
 
 # 初始化变量
 min_dist = 999999.0  # 最小距离
-best_match = ""       # 最佳匹配
-Dist = []            # 距离列表
 
 # 一键占卜按钮
 if st.button("一键占卜", use_container_width=True):
     # 计算用户得分与各标准向量的欧氏距离
+    local_distances = {}
+    local_best_match = ""
+    local_min_dist = 999999.0
+    
     for title, coords in profiles.items():
         dist = math.sqrt((user[0] - coords[0]) ** 2 + (user[1] - coords[1]) ** 2 + (user[2] - coords[2]) ** 2)
-        Dist.append(dist)
+        local_distances[title] = dist
         # 更新最小距离和最佳匹配
-        if dist < min_dist:
-            min_dist = dist
-            best_match = title
+        if dist < local_min_dist:
+            local_min_dist = dist
+            local_best_match = title
+    
+    # 存储结果到会话状态
+    st.session_state.best_match = local_best_match
+    st.session_state.distances = local_distances
     
     # 显示结果
     st.balloons()  # 显示气球动画
-    st.success(f"{name}，你们的关系极有可能是：{best_match} !")  # 显示占卜结果
     st.toast("占卜完成！")
 
-# 后续问题：是否理想关系
-answer = st.radio("该结果是你的理想关系吗？", ["是理想关系", "不是理想关系"], horizontal=True, index=None)
+# 持久显示占卜结果
+if st.session_state.best_match:
+    st.success(f"{name}，你们的关系极有可能是：{st.session_state.best_match} !")
 
-if answer == "不是理想关系":
+# 后续问题：是否理想关系
+st.session_state.answer = st.radio("该结果是你的理想关系吗？", ["是理想关系", "不是理想关系"], horizontal=True, index=None, key="answer_radio")
+
+if st.session_state.answer == "不是理想关系":
     # 请求神秘力量抽签按钮
     if st.button("请求获得神秘力量，一键抽签", use_container_width=True):
-        list = ["社交伙伴", "依恋对象", "灵魂伴侣"]
-        weilai = random.choice(list)
+        # 选择距离第二小的关系类型
+        if st.session_state.distances:
+            # 对距离按升序排序
+            sorted_distances = sorted(st.session_state.distances.items(), key=lambda x: x[1])
+            # 取第二个元素（距离第二小的）
+            if len(sorted_distances) >= 2:
+                local_weilai = sorted_distances[1][0]
+            else:
+                # 如果只有一个关系类型，就选它
+                local_weilai = sorted_distances[0][0]
+        else:
+            # 如果还没有占卜，就随机选择
+            list = ["社交伙伴", "依恋对象", "灵魂伴侣"]
+            local_weilai = random.choice(list)
+        
+        # 存储结果到会话状态
+        st.session_state.weilai = local_weilai
+        
         # 显示进度条
         bar = st.progress(0)
         for i in range(100):
             time.sleep(0.01)
             bar.progress(i + 1)
-        st.success(f"将来你们可能是：{weilai}~")
         st.toast("抽签完成！")
-elif answer == "是理想关系":
+    
+    # 持久显示抽签结果
+    if st.session_state.weilai:
+        st.success(f"将来你们可能是：{st.session_state.weilai}~")
+elif st.session_state.answer == "是理想关系":
     st.success(f"恭喜你噢！感谢参与~")
 
 # 分割线：结束区域
 st.divider()
-st.caption("@2026年最新版")
+
+# 查看科学统计按钮
+if st.button("查看科学统计", use_container_width=True):
+    if st.session_state.distances:  # 确保已经进行了占卜
+        # 使用pandas绘制距离图表
+        st.subheader("各关系类型匹配度")
+        df = pd.DataFrame(list(st.session_state.distances.items()), columns=["关系类型", "距离"])
+        # 距离越小，匹配度越高，所以转换为匹配度百分比
+        df["匹配度"] = (1 - df["距离"] / df["距离"].max()) * 100
+        
+        # 显示数据表格
+        st.dataframe(df)
+        
+        # 绘制柱状图
+        fig, ax = plt.subplots()
+        ax.bar(df["关系类型"], df["匹配度"])
+        ax.set_ylabel("匹配度 (%)")
+        ax.set_title("各关系类型匹配度分析")
+        st.pyplot(fig)
+    else:
+        st.warning("请先进行一键占卜，再查看科学统计！")
+
+
